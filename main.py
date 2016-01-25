@@ -76,7 +76,7 @@ def show_layer_image(id, filename, db):
 @app.route('/')
 def index(db):
     models = db.execute('select Model.id, Model.name, Model.epoch, Model.is_trained, Model.created_at, Model.network_name, Model.algorithm, Dataset.name from Model left join Dataset on Model.dataset_id = Dataset.id order by Model.id DESC')
-    dataset_cur = db.execute('select id, name, dataset_path from Dataset')
+    dataset_cur = db.execute('select id, name, dataset_path from Dataset order by updated_at desc')
     dataset_rows = dataset_cur.fetchall()
     datasets = []
     for d in dataset_rows:
