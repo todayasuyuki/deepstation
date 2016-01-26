@@ -220,7 +220,7 @@ def load_module(dir_name, symbol):
     (file, path, description) = imp.find_module(symbol,[dir_name])
     return imp.load_module(symbol, file, path, description)
             
-def do_train(db_path, train, test, mean, root_output_dir, model_dir, model_id, batchsize=32, val_batchsize=250, epoch=10, gpu=-1, loaderjob=20):
+def do_train(db_path, train, test, mean, root_output_dir, model_dir, model_id, batchsize=32, val_batchsize=250, epoch=10, gpu=-1, loaderjob=20,pretrained_model=""):
     conn = sqlite3.connect(db_path)
     db = conn.cursor()
     cursor = db.execute('select name from Model where id = ?', (model_id,))
@@ -240,20 +240,28 @@ def do_train(db_path, train, test, mean, root_output_dir, model_dir, model_id, b
     model_module = load_module(model_dir, model_name)
     model = model_module.Network()
     
+    # create directory for saving trained models
+    output_dir = root_output_dir + os.sep + model_name
+    if not os.path.exists(output_dir):
+        os.mkdir(output_dir)
+
+    # Load pretrained model
+    if pretrained_model.find("model") > -1:
+        print("load pretrained model : "+output_dir + os.sep +pretrained_model)
+        serializers.load_hdf5(output_dir + os.sep +pretrained_model, model)
+
+
     if gpu >= 0:
         cuda.get_device(gpu).use()
         model.to_gpu()
-        
+
+
     optimizer = optimizers.MomentumSGD(lr=0.01, momentum=0.9)
     optimizer.setup(model)
     
     data_q = queue.Queue(maxsize=1)
     res_q = queue.Queue()
 
-    # create directory for saving trained models
-    output_dir = root_output_dir + os.sep + model_name
-    if not os.path.exists(output_dir):
-        os.mkdir(output_dir)
         
     db.execute('update Model set epoch = ?, trained_model_path = ?, graph_data_path = ?, is_trained = 1, line_graph_data_path = ? where id = ?', (epoch, output_dir, output_dir + os.sep + 'graph.dot', output_dir + os.sep + 'line_graph.tsv', model_id))
     conn.commit()

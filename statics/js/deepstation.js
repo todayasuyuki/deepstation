@@ -220,6 +220,7 @@ $('#start_train_btn').on('click', function(e){
     $('#processing_screen').removeClass('hidden');
     var model_id = $('#model_id').val();
     var dataset_id = parseInt($('#select_dataset').val(), 10);
+    var pretrained_model = $('#select_pretrainedmodel').val();
     var epoch = $('#epoch_input').val();
     var gpu_num = $('#gpu_num').val() || $('input[name="gpu_num"]:checked').val();
     if(dataset_id < 0) {
@@ -230,7 +231,8 @@ $('#start_train_btn').on('click', function(e){
             model_id: model_id,
             dataset_id: dataset_id,
             epoch: epoch,
-            gpu_num: gpu_num
+            gpu_num: gpu_num,
+            pretrained_model:pretrained_model
         }, function(ret){
         if(ret.status === "OK") {
             $('#processing_screen').addClass('hidden');
